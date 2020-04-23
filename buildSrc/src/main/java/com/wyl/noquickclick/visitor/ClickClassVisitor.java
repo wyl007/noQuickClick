@@ -1,8 +1,7 @@
 package com.wyl.noquickclick.visitor;
 
-import com.android.tools.r8.org.objectweb.asm.Opcodes;
-
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
 
 /**
  * author : wangyuelin

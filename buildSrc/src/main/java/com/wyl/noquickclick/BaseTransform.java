@@ -60,6 +60,7 @@ public abstract class BaseTransform extends Transform {
     @Override
     public void transform(TransformInvocation transformInvocation) throws TransformException, InterruptedException, IOException {
         super.transform(transformInvocation);
+        long startTime = System.currentTimeMillis();
         TransformOutputProvider outputProvider = transformInvocation.getOutputProvider();
         //不支持增量编译，将之前的输出产物，全部删除，避免出现错乱
         if (!transformInvocation.isIncremental()) {
@@ -79,6 +80,8 @@ public abstract class BaseTransform extends Transform {
             }
 
         }
+
+        System.out.println("处理耗时：" + (System.currentTimeMillis() - startTime));
     }
 
     /**
@@ -104,16 +107,19 @@ public abstract class BaseTransform extends Transform {
                     switch (status) {
                         case NOTCHANGED:
                             System.out.println("文件状态 ：NOTCHANGED");
-                            copyFile(inputFile, out);
                             break;
                         case CHANGED:
                             System.out.println("文件状态 ：CHANGED");
                         case ADDED:
                             System.out.println("文件状态 ：ADDED");
-                            if (!inputFile.isDirectory() && !classFilter(inputFile.getAbsolutePath())) {
+                            if (!inputFile.isDirectory()) {
                                 System.out.println("输入：" + inputFile.getAbsolutePath());
                                 System.out.println("输出：" + out.getAbsolutePath());
-                                transformFile(inputFile, out, inject());
+                                if(classFilter(inputFile.getAbsolutePath())) {
+                                    copyFile(inputFile, out);
+                                } else {
+                                    transformFile(inputFile, out, inject());
+                                }
                             }
                             break;
                         case REMOVED:
@@ -129,7 +135,7 @@ public abstract class BaseTransform extends Transform {
                 }
             });
         } else {
-//            System.out.println("非增量处理");
+            System.out.println("非增量处理");
             for (File in : FileUtils.getAllFiles(inputDir)) {
 //                System.out.println("outputDir:" + outputDir.getAbsolutePath());
                 System.out.println("输入：" + in.getAbsolutePath());
@@ -148,14 +154,13 @@ public abstract class BaseTransform extends Transform {
     }
 
     private void copyFile(File in, File out) {
-//        System.out.println("将文件：" + in.getAbsolutePath());
-//        System.out.println("拷贝到：" + out.getAbsolutePath());
         try {
             //将源文件直接拷贝到输出文件
             out.mkdirs();
             if (!out.exists()) {
                 if (out.createNewFile()) {
                     //文件创建失败
+                    System.out.println("文件创建失败");
                     return;
                 }
             }

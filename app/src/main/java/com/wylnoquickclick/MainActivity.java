@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 count++;
+                count += 2;
                 tv.setText("值：" + count);
             }
         });
