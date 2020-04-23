@@ -41,7 +41,9 @@ class NoQuickClickPlugin implements Plugin<Project> {
 //        })
 
         def android = project.extensions.findByType(AppExtension.class)
-        android.registerTransform()
+        //注册Transform(
+        android.registerTransform(new NoQuickClickTransform())
+
 
     }
 
