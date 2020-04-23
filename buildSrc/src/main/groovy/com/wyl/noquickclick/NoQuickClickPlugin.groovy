@@ -1,12 +1,8 @@
 package com.wyl.noquickclick
 
-
+import com.android.build.gradle.AppExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-
-/**
- * 绝对不能使用依赖的方式依赖插件，会报错，插件和Library是不一样的
- */
 
 class NoQuickClickPlugin implements Plugin<Project> {
 
@@ -38,11 +34,14 @@ class NoQuickClickPlugin implements Plugin<Project> {
 //        AopConfig config = getConfig(project)
 //        project.android.registerTransform(new PreClass(config, project))
 
-        project.task('AopLogPlugin', {
-            println ('========================')
-            println ('AopLogPlugin')
-            println ('========================')
-        })
+//        project.task('AopLogPlugin', {
+//            println ('========================')
+//            println ('AopLogPlugin')
+//            println ('========================')
+//        })
+
+        def android = project.extensions.findByType(AppExtension.class)
+        android.registerTransform()
 
     }
 
