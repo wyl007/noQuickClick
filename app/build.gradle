@@ -24,6 +24,12 @@ android {
 
 }
 
+noQuickClickConfig {
+    isEnable = true
+    includePackages = ['com.wylnoquickclick']
+    filterClass = ['R$', 'BuildConfig.class']
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 

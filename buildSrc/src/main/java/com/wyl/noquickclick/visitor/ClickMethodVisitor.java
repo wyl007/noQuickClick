@@ -27,7 +27,7 @@ public class ClickMethodVisitor extends AdviceAdapter {
     @Override
     protected void onMethodEnter() {
         super.onMethodEnter();
-        mv.visitMethodInsn(INVOKESTATIC, "com/wylnoquickclick/CheckOnClick", "isFastClick", "()Z", false);
+        mv.visitMethodInsn(INVOKESTATIC, "com/talk51/basiclib/widget/CheckOnClick", "isFastClick", "()Z", false);
         Label label = new Label();
         mv.visitJumpInsn(IFEQ,label);
         mv.visitInsn(RETURN);

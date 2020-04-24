@@ -1,4 +1,4 @@
-package com.wyl.noquickclick;
+package com.wyl.noquickclick.base;
 
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
@@ -15,6 +15,7 @@ import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 
 import org.apache.commons.io.IOUtils;
+import org.gradle.api.Project;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,6 +35,13 @@ import java.util.zip.ZipOutputStream;
  * desc   : 封装了通用的逻辑，可以通过集成定制，主要逻辑：多输入的jar和和输入class目录的处理流程
  */
 public abstract class BaseTransform extends Transform {
+
+    protected Project project;
+
+    public BaseTransform(Project project) {
+        this.project = project;
+    }
+
     @Override
     public String getName() {
         return "BaseTransform";
@@ -70,12 +78,12 @@ public abstract class BaseTransform extends Transform {
         for (TransformInput input : transformInvocation.getInputs()) {
             //处理jar包里面的class
             for (JarInput jarInput : input.getJarInputs()) {
-                System.out.println("开始处理Jar文件：" + jarInput.getFile().getAbsolutePath());
+//                System.out.println("开始处理Jar文件：" + jarInput.getFile().getAbsolutePath());
                 handleJarInput(jarInput, transformInvocation);
             }
             //处理文件夹下的class
             for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
-                System.out.println("开始处理目录：" + directoryInput.getFile().getAbsolutePath());
+//                System.out.println("开始处理目录：" + directoryInput.getFile().getAbsolutePath());
                 handleDirectoryInput(directoryInput, transformInvocation);
             }
 
@@ -99,22 +107,22 @@ public abstract class BaseTransform extends Transform {
         File outputDir = transformInvocation.getOutputProvider().getContentLocation(directoryInput.getName(), directoryInput.getContentTypes(), directoryInput.getScopes(), Format.DIRECTORY);
         if (transformInvocation.isIncremental()) {
             //增量方式处理
-            System.out.println("增量处理");
+//            System.out.println("增量处理");
             directoryInput.getChangedFiles().forEach(new BiConsumer<File, Status>() {
                 @Override
                 public void accept(File inputFile, Status status) {
                     File out = toOutputFile(outputDir, inputDir, inputFile);
                     switch (status) {
                         case NOTCHANGED:
-                            System.out.println("文件状态 ：NOTCHANGED");
+//                            System.out.println("文件状态 ：NOTCHANGED");
                             break;
                         case CHANGED:
-                            System.out.println("文件状态 ：CHANGED");
+//                            System.out.println("文件状态 ：CHANGED");
                         case ADDED:
-                            System.out.println("文件状态 ：ADDED");
+//                            System.out.println("文件状态 ：ADDED");
                             if (!inputFile.isDirectory()) {
-                                System.out.println("输入：" + inputFile.getAbsolutePath());
-                                System.out.println("输出：" + out.getAbsolutePath());
+//                                System.out.println("输入：" + inputFile.getAbsolutePath());
+//                                System.out.println("输出：" + out.getAbsolutePath());
                                 if(classFilter(inputFile.getAbsolutePath())) {
                                     copyFile(inputFile, out);
                                 } else {
@@ -123,7 +131,7 @@ public abstract class BaseTransform extends Transform {
                             }
                             break;
                         case REMOVED:
-                            System.out.println("文件状态 ：REMOVED");
+//                            System.out.println("文件状态 ：REMOVED");
                             try {
                                 FileUtils.deleteIfExists(out);
                             } catch (IOException e) {
@@ -135,20 +143,20 @@ public abstract class BaseTransform extends Transform {
                 }
             });
         } else {
-            System.out.println("非增量处理");
+//            System.out.println("非增量处理");
             for (File in : FileUtils.getAllFiles(inputDir)) {
 //                System.out.println("outputDir:" + outputDir.getAbsolutePath());
-                System.out.println("输入：" + in.getAbsolutePath());
+//                System.out.println("输入：" + in.getAbsolutePath());
                 File out = toOutputFile(outputDir, inputDir, in);
                 if (!classFilter(in.getAbsolutePath())) {
-                    System.out.println("不过滤");
+//                    System.out.println("不过滤");
 
                     transformFile(in, out, inject());
                 } else {
-                    System.out.println("过滤");
+//                    System.out.println("过滤");
                     copyFile(in, out);
                 }
-                System.out.println("输出：" + out.getAbsolutePath());
+//                System.out.println("输出：" + out.getAbsolutePath());
             }
         }
     }
@@ -239,21 +247,27 @@ public abstract class BaseTransform extends Transform {
         File jarInputFile = jarInput.getFile();
         //查询得到输入对应的输出路径
         File jarOutPutFile = outputProvider.getContentLocation(jarInput.getName(), jarInput.getContentTypes(), jarInput.getScopes(), Format.JAR);
-        System.out.println("输入：" + jarInputFile.getAbsolutePath());
-        System.out.println("输出：" + jarOutPutFile.getAbsolutePath());
+        jarOutPutFile.deleteOnExit();
+        try {
+            jarOutPutFile.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//        System.out.println("输入：" + jarInputFile.getAbsolutePath());
+//        System.out.println("输出：" + jarOutPutFile.getAbsolutePath());
         if (transformInvocation.isIncremental()) {
             //增量处理jar包
             System.out.println("增量处理");
             switch (jarInput.getStatus()) {
                 case ADDED:
-                    System.out.println("文件状态：ADDED");
+//                    System.out.println("文件状态：ADDED");
                 case CHANGED:
-                    System.out.println("文件状态：CHANGED");
+//                    System.out.println("文件状态：CHANGED");
                     //新增或者修改的jar需要处理
                     transformJar(jarInputFile, jarOutPutFile, inject());
                     break;
                 case REMOVED:
-                    System.out.println("文件状态：REMOVED");
+//                    System.out.println("文件状态：REMOVED");
                     //删除输出jar文件
                     try {
                         FileUtils.delete(jarOutPutFile);
@@ -263,11 +277,11 @@ public abstract class BaseTransform extends Transform {
                     break;
                 case NOTCHANGED:
                     //没有改变，不需要处理
-                    System.out.println("文件状态：NOTCHANGED");
+//                    System.out.println("文件状态：NOTCHANGED");
                     break;
             }
         } else {
-            System.out.println("非增量处理");
+//            System.out.println("非增量处理");
             //不是增量编译，直接对处理
             transformJar(jarInputFile, jarOutPutFile, inject());
         }
@@ -285,12 +299,7 @@ public abstract class BaseTransform extends Transform {
             return;
         }
         //确保输出目录存在
-        try {
-            Files.createParentDirs(outputJarFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
+        outputJarFile.mkdirs();
         ZipInputStream zis = null;
         ZipOutputStream zos = null;
         try {
@@ -347,21 +356,12 @@ public abstract class BaseTransform extends Transform {
     /**
      * class过滤，子类覆写实现自己的过滤
      *
-     * @param path
+     * @param classPath
      * @return true：表示需要过滤；false：表示不需要过滤
      */
-    protected boolean classFilter(String path) {
-        if (path == null) {
-            return true;
-        }
-
-        String classFullName = path.replaceAll("/", ".");
-        System.out.println("classFilter 判断名称：" + path);
-        return !classFullName.endsWith(".class") //不是class文件
-                || classFullName.contains("R.class") //R文件
-                || classFullName.contains("R$")//资源文件
-                || classFullName.contains("BuildConfig.class")
-                || !classFullName.contains("com.wylnoquickclick");
+    protected boolean classFilter(String classPath) {
+        //默认类全部过滤掉
+        return true;
     }
 
     /**
